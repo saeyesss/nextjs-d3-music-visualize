@@ -79,4 +79,15 @@ body {
   font-family: 'Circular Std Book', sans-serif;
   background-color: theme('colors.black');
   color: theme('colors.white');
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.relative {
+  position: relative;
+}
+
+.absolute {
+  position: absolute;
 }
