@@ -6,7 +6,11 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import BubbleContainer from '@/components/BubbleContainer';
 import Login from '@/components/Login';
-import { fetchLastfmTopAlbums } from '@/redux/slices/lastfmSlice';
+import {
+  fetchLastfmTopAlbums,
+  fetchLastfmTopArtists,
+  fetchLastfmTopTracks,
+} from '@/redux/slices/lastfmSlice';
 
 export default function Home() {
   const dispatch = useDispatch();
@@ -14,9 +18,13 @@ export default function Home() {
   const loading = useSelector((state) => state.spotify.loading);
   const error = useSelector((state) => state.spotify.error);
   const lastfmAlbums = useSelector((state) => state.lastfm.topAlbums);
+  const lastfmArtists = useSelector((state) => state.lastfm.topArtists);
+  const lastfmTracks = useSelector((state) => state.lastfm.topTracks);
 
   useEffect(() => {
     dispatch(fetchLastfmTopAlbums());
+    dispatch(fetchLastfmTopArtists());
+    dispatch(fetchLastfmTopTracks());
   }, [dispatch]);
 
   if (loading) return <div>Loading...</div>;
@@ -36,6 +44,32 @@ export default function Home() {
               />
               <p>{album.name}</p>
               <p>{album.artist.name}</p>
+            </div>
+          ))}
+
+        {lastfmArtists &&
+          lastfmArtists.map((artist, index) => (
+            <div key={index} style={{ margin: '10px' }}>
+              <img
+                src={
+                  artist.image.find((img) => img.size === 'small')?.['#text']
+                }
+                alt={artist.name}
+                style={{ width: '150px', height: '150px' }}
+              />
+              <p>{artist.name}</p>
+            </div>
+          ))}
+
+        {lastfmTracks &&
+          lastfmTracks.map((track, index) => (
+            <div key={index} style={{ margin: '10px' }}>
+              <img
+                src={track.image.find((img) => img.size === 'small')?.['#text']}
+                alt={track.name}
+                style={{ width: '150px', height: '150px' }}
+              />
+              <p>{track.name}</p>
             </div>
           ))}
       </div>
