@@ -11,6 +11,7 @@ import {
   fetchLastfmTopArtists,
   fetchLastfmTopTracks,
 } from '@/redux/slices/lastfmSlice';
+import BubbleChart from '@/components/BubbleChart';
 
 export default function Home() {
   const dispatch = useDispatch();
@@ -25,15 +26,18 @@ export default function Home() {
     dispatch(fetchLastfmTopAlbums());
     dispatch(fetchLastfmTopArtists());
     dispatch(fetchLastfmTopTracks());
-  }, [dispatch]);
+  }, []);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
   return (
-    <main className='flex min-h-screen flex-col items-center justify-center p-24'>
+    <main>
       <h1 className='text-4xl mb-8'>Welcome to my Music Viz!</h1>
+      <BubbleChart data={lastfmAlbums} />
 
-      <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+      {/* <BubbleContainer /> */}
+
+      {/* <div style={{ display: 'flex', flexWrap: 'wrap' }}>
         {lastfmAlbums &&
           lastfmAlbums.map((album, index) => (
             <div key={index} style={{ margin: '10px' }}>
@@ -64,6 +68,7 @@ export default function Home() {
         {lastfmTracks &&
           lastfmTracks.map((track, index) => (
             <div key={index} style={{ margin: '10px' }}>
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={track.image.find((img) => img.size === 'small')?.['#text']}
                 alt={track.name}
@@ -72,8 +77,8 @@ export default function Home() {
               <p>{track.name}</p>
             </div>
           ))}
-      </div>
-      {!token ? <Login /> : <BubbleContainer />}
+      </div> */}
+      {/* {!token ? <Login /> : <BubbleContainer />} */}
     </main>
   );
 }
