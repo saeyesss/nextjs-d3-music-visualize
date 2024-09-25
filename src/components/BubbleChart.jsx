@@ -10,16 +10,16 @@ const BubbleChart = ({ data }) => {
     height: 0,
   });
   useEffect(() => {
-    function handleResize() {
+    function handleWindowResize() {
       setWindowDimensions({
         width: window.innerWidth,
         height: window.innerHeight,
       });
     }
-    handleResize();
-    window.addEventListener('resize', handleResize);
+    handleWindowResize();
+    window.addEventListener('resize', handleWindowResize);
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', handleWindowResize);
     };
   }, []);
 
@@ -30,12 +30,19 @@ const BubbleChart = ({ data }) => {
     const svg = d3
       .select(svgRef.current)
       .attr('width', width)
-      .attr('height', height);
-
+      .attr('height', height)
+      .call(
+        d3
+          .zoom()
+          .scaleExtent([0.5, 5])
+          .on('zoom', (e) => {
+            svg.attr('transform', e.transform);
+          })
+      );
     const bubbleData = data.map((item, index) => ({
       ...item,
       id: index,
-      r: Math.sqrt(item.playcount) * 1.5,
+      r: Math.sqrt(item.playcount) * 2,
       img: item.image.find((img) => img.size === 'large')?.['#text'],
       x: width / 2,
       y: height / 2,
@@ -46,11 +53,11 @@ const BubbleChart = ({ data }) => {
       .force('center', d3.forceCenter(width / 2, height / 2))
       .force(
         'charge',
-        d3.forceManyBody().strength((d) => -d.r * 0.5)
+        d3.forceManyBody().strength((d) => 2 * Math.log10(d.r))
       )
       .force(
         'collision',
-        d3.forceCollide().radius((d) => d.r + 2)
+        d3.forceCollide().radius((d) => d.r + 1)
       )
       .on('tick', () => {
         nodes.attr('transform', (d) => `translate(${d.x},${d.y})`);
@@ -86,62 +93,60 @@ const BubbleChart = ({ data }) => {
       .attr('clip-path', (d) => `url(#clip-${d.id})`)
       .attr('cursor', 'pointer');
 
-    function handleMouseOver(e, d) {
-        
-        const [mx, my] = d3.pointer(event);
-        
-      // make hovered image big
-      d3.select(this)
-        .select('image')
+    function handleMouseOver(event, d) {
+      const [mx, my] = d3.pointer(event);
+
+      nodes
+        .selectAll('image')
         .transition()
         .duration(300)
-        .attr('width', d.r * 4)
-        .attr('height', d.r * 4)
-        .attr('x', -d.r * 2)
-        .attr('y', -d.r * 2);
-      // make hovered mask big
-      d3.select(this)
+        .attr('width', (node) => {
+          const distance = Math.sqrt((node.x - mx) ** 2 + (node.y - my) ** 2);
+          const scale = 1 - Math.min(distance / width, 0.5);
+          return node.id === d.id ? node.r * 4 : node.r * 2 * scale;
+        })
+        .attr('height', (node) => {
+          const distance = Math.sqrt((node.x - mx) ** 2 + (node.y - my) ** 2);
+          const scale = 1 - Math.min(distance / width, 0.5);
+          return node.id === d.id ? node.r * 4 : node.r * 2 * scale;
+        })
+        .attr('x', (node) => {
+          const distance = Math.sqrt((node.x - mx) ** 2 + (node.y - my) ** 2);
+          const scale = 1 - Math.min(distance / width, 0.5);
+          return node.id === d.id ? -node.r * 2 : -node.r * scale;
+        })
+        .attr('y', (node) => {
+          const distance = Math.sqrt((node.x - mx) ** 2 + (node.y - my) ** 2);
+          const scale = 1 - Math.min(distance / width, 0.5);
+          return node.id === d.id ? -node.r * 2 : -node.r * scale;
+        });
+
+      nodes
         .select('clipPath')
         .select('circle')
         .transition()
         .duration(300)
-        .attr('r', d.r * 2);
+        .attr('r', (node) => {
+          const distance = Math.sqrt((node.x - mx) ** 2 + (node.y - my) ** 2);
+          const scale = 1 - Math.min(distance / width, 0.5);
+          return node.id === d.id ? d.r * 2 : node.r * scale;
+        });
 
-      // make other images small
-      nodes
-        .filter((node) => node.id !== d.id)
-        .select('image')
-        .transition()
-        .duration(300)
-        .attr('width', (node) => node.r)
-        .attr('height', (node) => node.r)
-        .attr('x', (node) => -node.r / 2)
-        .attr('y', (node) => -node.r / 2);
-      // make other mask small
-
-      nodes
-        .filter((node) => node.id !== d.id)
-        .select('clipPath')
-        .select('circle')
-        .transition()
-        .duration(300)
-        .attr('r', (node) => node.r / 2);
-
-      // Adjust collision radius
       simulation
         .force(
           'collision',
           d3.forceCollide().radius((node) => {
             if (node.id === d.id) return d.r * 2 + 2;
-            return node.r / 2 + 2;
+            const distance = Math.sqrt((node.x - mx) ** 2 + (node.y - my) ** 2);
+            const scale = 1 - Math.min(distance / width, 0.5);
+            return node.r * scale + 2;
           })
         )
         .alpha(0.7)
         .restart();
     }
 
-    function handleMouseOut(e, d) {
-      // Reset all bubbles to original size
+    function handleMouseOut(event, d) {
       nodes
         .select('image')
         .transition()
@@ -158,7 +163,13 @@ const BubbleChart = ({ data }) => {
         .duration(300)
         .attr('r', (node) => node.r);
 
-      // Reset collision radius
+      // nodes
+      //   .filter((node) => node.id === d.id)
+      //   .transition()
+      //   .duration(300)
+      //   .ease(d3.easeBounceOut)
+      //   .attr('transform', 'rotate(0)');
+
       simulation
         .force(
           'collision',
@@ -167,10 +178,7 @@ const BubbleChart = ({ data }) => {
         .alpha(0.5)
         .restart();
     }
-
-    // Click handler
     function handleBubbleClick(event, d) {
-      // Implement click behavior (e.g., open modal with more info)
       alert(`Clicked on ${d.name} by ${d.artist.name}`);
     }
 
