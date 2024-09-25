@@ -3,7 +3,7 @@ import axios from 'axios';
 import host from '../../../host';
 const ITEM_LIMIT = 300;
 const PERIOD = 'overall';
-const LASTFM_API_BASE_URL = 'http://ws.audioscrobbler.com/2.0/';
+const LASTFM_API_BASE_URL = 'https://ws.audioscrobbler.com/2.0/';
 
 const lastfmApiClient = axios.create({
   baseURL: LASTFM_API_BASE_URL,
