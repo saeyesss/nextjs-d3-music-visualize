@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 import host from '../../../host';
-const ITEM_LIMIT = 100;
+const ITEM_LIMIT = 500;
 const PERIOD = 'overall';
 const LASTFM_API_BASE_URL = 'http://ws.audioscrobbler.com/2.0/';
 

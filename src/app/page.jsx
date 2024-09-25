@@ -1,11 +1,7 @@
 'use client';
 
-import Image from 'next/image';
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-
-import BubbleContainer from '@/components/BubbleContainer';
-import Login from '@/components/Login';
 import {
   fetchLastfmTopAlbums,
   fetchLastfmTopArtists,
@@ -14,71 +10,88 @@ import {
 import BubbleChart from '@/components/BubbleChart';
 
 export default function Home() {
+  const [username, setUsername] = useState('saeyesss');
+  const [activeTab, setActiveTab] = useState('albums');
+
   const dispatch = useDispatch();
-  const token = useSelector((state) => state.spotify.token);
-  const loading = useSelector((state) => state.spotify.loading);
-  const error = useSelector((state) => state.spotify.error);
   const lastfmAlbums = useSelector((state) => state.lastfm.topAlbums);
   const lastfmArtists = useSelector((state) => state.lastfm.topArtists);
   const lastfmTracks = useSelector((state) => state.lastfm.topTracks);
+  const loading = useSelector((state) => state.lastfm.loading);
+  const error = useSelector((state) => state.lastfm.error);
 
   useEffect(() => {
-    dispatch(fetchLastfmTopAlbums());
-    dispatch(fetchLastfmTopArtists());
-    dispatch(fetchLastfmTopTracks());
-  }, []);
+    if (activeTab === 'albums') {
+      dispatch(fetchLastfmTopAlbums(username));
+    } else if (activeTab === 'artists') {
+      dispatch(fetchLastfmTopArtists(username));
+      alert(
+        'TODO: Will add this! Latest Last.FM api restricts getting artist images directly. '
+      );
+    } else if (activeTab === 'tracks') {
+      dispatch(fetchLastfmTopTracks(username));
+      alert(
+        'TODO: Will add this! Latest Last.FM api restricts getting track art directly. '
+      );
+    }
+  }, [activeTab, username]);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
+
   return (
-    <main>
-      <h1 className='text-4xl mb-8'>Welcome to my Music Viz!</h1>
-      <BubbleChart data={lastfmAlbums} />
+    <main className='relative w-full h-screen bg-gray-900'>
+      <h1 className='absolute top-10 left-1/2 transform -translate-x-1/2 text-xl font-bold text-white bg-white/10 backdrop-blur-md p-4 rounded-lg z-20'>
+        Your Last.FM Scrobbles Viz!
+      </h1>
+      <div className='absolute top-24 left-1/2 transform -translate-x-1/2 z-20'>
+        <input
+          type='text'
+          value={username}
+          onClick={(e) => alert('TODO: Will get to this!')}
+          // onChange={(e) => setUsername(e.target.value)}
+          placeholder='Last.fm Username'
+          className='mt-2 w-80 px-6 py-2 text-lg rounded-full bg-white/20 backdrop-blur-md border border-white/30 shadow-lg outline-none text-white focus:bg-white/30 focus:border-white focus:shadow-lg transition-all ease-in-out duration-300'
+        />
+      </div>
+      <div className='absolute top-40 left-1/2 transform -translate-x-1/2 flex space-x-4 z-20'>
+        <button
+          className={`px-6 py-2 text-lg rounded-full bg-white/20 backdrop-blur-md text-white shadow-lg border border-white/30 transition-colors duration-300 ease-in-out ${
+            activeTab === 'albums' ? 'bg-white/30 border-white' : ''
+          }`}
+          onClick={() => setActiveTab('albums')}
+        >
+          Albums
+        </button>
+        <button
+          className={`px-6 py-2 text-lg rounded-full bg-white/20 backdrop-blur-md text-white shadow-lg border border-white/30 transition-colors duration-300 ease-in-out ${
+            activeTab === 'artists' ? 'bg-white/30 border-white' : ''
+          }`}
+          onClick={() => setActiveTab('artists')}
+        >
+          Artists
+        </button>
+        <button
+          className={`px-6 py-2 text-lg rounded-full bg-white/20 backdrop-blur-md text-white shadow-lg border border-white/30 transition-colors duration-300 ease-in-out ${
+            activeTab === 'tracks' ? 'bg-white/30 border-white' : ''
+          }`}
+          onClick={() => setActiveTab('tracks')}
+        >
+          Tracks
+        </button>
+      </div>
 
-      {/* <BubbleContainer /> */}
-
-      {/* <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-        {lastfmAlbums &&
-          lastfmAlbums.map((album, index) => (
-            <div key={index} style={{ margin: '10px' }}>
-              <img
-                src={album.image.find((img) => img.size === 'large')?.['#text']}
-                alt={album.name}
-                style={{ width: '150px', height: '150px' }}
-              />
-              <p>{album.name}</p>
-              <p>{album.artist.name}</p>
-            </div>
-          ))}
-
-        {lastfmArtists &&
-          lastfmArtists.map((artist, index) => (
-            <div key={index} style={{ margin: '10px' }}>
-              <img
-                src={
-                  artist.image.find((img) => img.size === 'small')?.['#text']
-                }
-                alt={artist.name}
-                style={{ width: '150px', height: '150px' }}
-              />
-              <p>{artist.name}</p>
-            </div>
-          ))}
-
-        {lastfmTracks &&
-          lastfmTracks.map((track, index) => (
-            <div key={index} style={{ margin: '10px' }}>
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={track.image.find((img) => img.size === 'small')?.['#text']}
-                alt={track.name}
-                style={{ width: '150px', height: '150px' }}
-              />
-              <p>{track.name}</p>
-            </div>
-          ))}
-      </div> */}
-      {/* {!token ? <Login /> : <BubbleContainer />} */}
+      <div className='absolute inset-0 z-10 pointer-events-auto'>
+        <BubbleChart
+          data={
+            activeTab === 'albums'
+              ? lastfmAlbums
+              : activeTab === 'artists'
+              ? lastfmArtists
+              : lastfmTracks
+          }
+        />
+      </div>
     </main>
   );
 }
