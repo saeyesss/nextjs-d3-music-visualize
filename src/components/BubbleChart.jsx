@@ -37,7 +37,7 @@ const BubbleChart = ({ data }) => {
     const bubbleData = data.map((item, index) => ({
       ...item,
       id: index,
-      r: Math.sqrt(item.playcount) * 1.5,
+      r: Math.sqrt(item.playcount) * 0.4 + Math.log2(item.playcount) * 3,
       img: item.image.find((img) => img.size === 'large')?.['#text'],
       x: width / 2,
       y: height / 2,
